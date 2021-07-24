@@ -1,0 +1,59 @@
+version: "3.8"
+
+services:
+  nginx:
+    image: nginx:latest
+    ports:
+      - "10080:80"
+      - "10443:443"
+    volumes:
+      - ./config/nginx/conf.d:/etc/nginx/conf.d
+      - static_volume:/home/project/static
+      - media_volume:/home/project/media
+    depends_on:
+      - gunicorn
+
+  gunicorn:
+    build:
+      context: .
+      args:
+        PIP_REQUIREMENTS: "${PIP_REQUIREMENTS}"
+    command: bash -c "/home/project/venv/bin/gunicorn --workers 3 --bind 0.0.0.0:8000 backend.wsgi:application"
+    depends_on:
+      - db
+    volumes:
+      - static_volume:/home/project/static
+      - media_volume:/home/project/media
+    expose:
+      - "8000"
+#    extra_hosts:
+#      - "database:192.168.52.130"
+    environment:
+      DJANGO_SETTINGS_MODULE: "${DJANGO_SETTINGS_MODULE}"
+      DJANGO_SECRET_KEY: "${DJANGO_SECRET_KEY}"
+      DATABASE_NAME: "${DATABASE_NAME}"
+      DATABASE_HOST: "${DATABASE_HOST}"
+      DATABASE_USER: "${DATABASE_USER}"
+#      DATABASE_PORT: "${DATABASE_PORT}"
+      DATABASE_PASSWORD: "${DATABASE_PASSWORD}"
+      EMAIL_HOST: "${EMAIL_HOST}"
+      EMAIL_PORT: "${EMAIL_PORT}"
+      EMAIL_HOST_USER: "${EMAIL_HOST_USER}"
+      EMAIL_HOST_PASSWORD: "${EMAIL_HOST_PASSWORD}"
+
+  db:
+    image: postgres:latest
+    restart: always
+    environment:
+      POSTGRES_DB: "${DATABASE_NAME}"
+      POSTGRES_USER: "${DATABASE_USER}"
+      POSTGRES_PASSWORD: "${DATABASE_PASSWORD}"
+    ports:
+      - 5432
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+
+volumes:
+  postgres_data:
+  static_volume:
+  media_volume:
