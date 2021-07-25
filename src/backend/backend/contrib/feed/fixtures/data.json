@@ -1,0 +1,171 @@
+[
+  {
+    "model": "feeds.source",
+    "pk": 1,
+    "fields": {
+      "name": "Lenta.ru : Новости",
+      "site_url": "https://lenta.ru",
+      "feed_url": "https://lenta.ru/rss/news",
+      "image_url": "https://lenta.ru/images/small_logo.png",
+      "description": "Новости, статьи, фотографии, видео. Семь дней в неделю, 24 часа в сутки.",
+      "last_polled": null,
+      "due_poll": "2021-07-25T06:53:22Z",
+      "etag": "W/\"b37ca2c6bf3b6b08a69568a4ef3fe566\"",
+      "last_modified": null,
+      "last_result": "Not modified",
+      "interval": 60,
+      "last_success": "2021-07-25T06:43:19Z",
+      "last_change": "2021-07-25T06:38:17Z",
+      "live": true,
+      "status_code": 304,
+      "last_302_url": null,
+      "last_302_start": "2021-07-24T23:28:04Z",
+      "max_index": 657,
+      "num_subs": 1,
+      "is_cloudflare": false
+    }
+  },
+  {
+    "model": "feeds.source",
+    "pk": 2,
+    "fields": {
+      "name": "Вести.Ru",
+      "site_url": "https://www.vesti.ru",
+      "feed_url": "https://www.vesti.ru/vesti.rss",
+      "image_url": null,
+      "description": "Сетевое издание. Новости, видео и фото дня",
+      "last_polled": null,
+      "due_poll": "2021-07-25T06:53:15Z",
+      "etag": null,
+      "last_modified": null,
+      "last_result": "OK (updated)",
+      "interval": 60,
+      "last_success": "2021-07-25T06:53:12Z",
+      "last_change": "2021-07-25T06:43:17Z",
+      "live": true,
+      "status_code": 200,
+      "last_302_url": null,
+      "last_302_start": null,
+      "max_index": 386,
+      "num_subs": 1,
+      "is_cloudflare": false
+    }
+  },
+  {
+    "model": "django_celery_beat.crontabschedule",
+    "pk": 1,
+    "fields": {
+      "minute": "0",
+      "hour": "*",
+      "day_of_week": "*",
+      "day_of_month": "*",
+      "month_of_year": "*",
+      "timezone": "UTC"
+    }
+  },
+  {
+    "model": "django_celery_beat.crontabschedule",
+    "pk": 2,
+    "fields": {
+      "minute": "0",
+      "hour": "4",
+      "day_of_week": "*",
+      "day_of_month": "*",
+      "month_of_year": "*",
+      "timezone": "UTC"
+    }
+  },
+  {
+    "model": "django_celery_beat.crontabschedule",
+    "pk": 3,
+    "fields": {
+      "minute": "0",
+      "hour": "4",
+      "day_of_week": "*",
+      "day_of_month": "*",
+      "month_of_year": "*",
+      "timezone": "Asia/Ashgabat"
+    }
+  },
+  {
+    "model": "django_celery_beat.periodictasks",
+    "pk": 1,
+    "fields": {
+      "last_update": "2021-07-25T06:52:05.482Z"
+    }
+  },
+  {
+    "model": "django_celery_beat.periodictask",
+    "pk": 1,
+    "fields": {
+      "name": "update_feeds",
+      "task": "backend.contrib.feed.tasks.get_those_feeds",
+      "interval": null,
+      "crontab": 1,
+      "solar": null,
+      "clocked": null,
+      "args": "[]",
+      "kwargs": "{}",
+      "queue": null,
+      "exchange": null,
+      "routing_key": null,
+      "headers": "{}",
+      "priority": null,
+      "expires": null,
+      "expire_seconds": null,
+      "one_off": false,
+      "start_time": "2021-07-24T18:58:31Z",
+      "enabled": true,
+      "last_run_at": "2021-07-25T06:49:00.001Z",
+      "total_run_count": 350,
+      "date_changed": "2021-07-25T06:49:40.099Z",
+      "description": ""
+    }
+  },
+  {
+    "model": "django_celery_beat.periodictask",
+    "pk": 2,
+    "fields": {
+      "name": "celery.backend_cleanup",
+      "task": "celery.backend_cleanup",
+      "interval": null,
+      "crontab": 2,
+      "solar": null,
+      "clocked": null,
+      "args": "[]",
+      "kwargs": "{}",
+      "queue": null,
+      "exchange": null,
+      "routing_key": null,
+      "headers": "{}",
+      "priority": null,
+      "expires": null,
+      "expire_seconds": 43200,
+      "one_off": false,
+      "start_time": null,
+      "enabled": true,
+      "last_run_at": "2021-07-25T04:35:06.494Z",
+      "total_run_count": 1,
+      "date_changed": "2021-07-25T06:43:27.939Z",
+      "description": ""
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 1,
+    "fields": {
+      "password": "pbkdf2_sha256$260000$OywOwurMzq7JuFshRZAEME$vSSnukXdeeM7FphRHZDb2qMnVED/fVJRff/7JCr1l1w=",
+      "last_login": "2021-07-24T19:02:49.689Z",
+      "is_superuser": true,
+      "username": "admin",
+      "first_name": "",
+      "last_name": "",
+      "email": "",
+      "is_staff": true,
+      "is_active": true,
+      "date_joined": "2021-07-24T18:04:42.853Z",
+      "groups": [],
+      "user_permissions": []
+    }
+  }
+]

@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+<a href="{% url 'feed:source-list' %}">Sources</a>
+<a href="{% url 'feed:index' %}">Posts</a>
+<img src="{{ source.image_url }}" alt="">
+<h4>Name: {{ source.name }}</h4>
+<p>Site url: <a href="{{ source.site_url }}">{{ source.site_url }}</a></p>
+<p>Feed url: <a href="{{ source.feed_url }}">{{ source.feed_url }}</a></p>
+<p>Description: {{ source.description }}</p>
+<p>Last success: {{ source.last_success }}</p>
+</body>
+</html>

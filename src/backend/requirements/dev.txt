@@ -1,8 +1,1 @@
 -r _base.txt
-
-
-django-debug-toolbar==3.2
-Faker==6.6.1
-python-dateutil==2.8.1
-six==1.15.0
-text-unidecode==1.3

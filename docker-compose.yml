@@ -3,57 +3,155 @@ version: "3.8"
 services:
   nginx:
     image: nginx:latest
+    restart: always
     ports:
-      - "10080:80"
-      - "10443:443"
+      - 80:80
     volumes:
+      - /var/log/nginx:/var/log/nginx
       - ./config/nginx/conf.d:/etc/nginx/conf.d
-      - static_volume:/home/project/static
-      - media_volume:/home/project/media
+      - static_volume:/home/${DATABASE_USER}/static
+      - media_volume:/home/${DATABASE_USER}/media
     depends_on:
       - gunicorn
 
   gunicorn:
+    restart: always
+    ports:
+    - 8000:8000
     build:
-      context: .
+      context: ./src/backend
+      dockerfile: backend.dockerfile
       args:
-        PIP_REQUIREMENTS: "${PIP_REQUIREMENTS}"
-    command: bash -c "/home/project/venv/bin/gunicorn --workers 3 --bind 0.0.0.0:8000 backend.wsgi:application"
-    depends_on:
-      - db
-    volumes:
-      - static_volume:/home/project/static
-      - media_volume:/home/project/media
-    expose:
-      - "8000"
-#    extra_hosts:
-#      - "database:192.168.52.130"
+        PIP_REQUIREMENTS: ${PIP_REQUIREMENTS}
+        DATABASE_USER: ${DATABASE_USER}
+    command: bash -c "./venv/bin/gunicorn --workers 3 --bind 0.0.0.0:8000 backend.wsgi:application"
     environment:
       DJANGO_SETTINGS_MODULE: "${DJANGO_SETTINGS_MODULE}"
       DJANGO_SECRET_KEY: "${DJANGO_SECRET_KEY}"
       DATABASE_NAME: "${DATABASE_NAME}"
       DATABASE_HOST: "${DATABASE_HOST}"
       DATABASE_USER: "${DATABASE_USER}"
-#      DATABASE_PORT: "${DATABASE_PORT}"
+      DATABASE_PORT: ${DATABASE_PORT}
       DATABASE_PASSWORD: "${DATABASE_PASSWORD}"
       EMAIL_HOST: "${EMAIL_HOST}"
       EMAIL_PORT: "${EMAIL_PORT}"
       EMAIL_HOST_USER: "${EMAIL_HOST_USER}"
       EMAIL_HOST_PASSWORD: "${EMAIL_HOST_PASSWORD}"
+      CELERY_BROKER_URL: "${CELERY_BROKER_URL}"
+      CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND}
+    depends_on:
+      - db
+    volumes:
+      - static_volume:/home/${DATABASE_USER}/static
+      - media_volume:/home/${DATABASE_USER}/media
+
 
   db:
-    image: postgres:latest
-    restart: always
-    environment:
-      POSTGRES_DB: "${DATABASE_NAME}"
-      POSTGRES_USER: "${DATABASE_USER}"
-      POSTGRES_PASSWORD: "${DATABASE_PASSWORD}"
-    ports:
-      - 5432
+    image: kartoza/postgis:13-3.1
     volumes:
-      - postgres_data:/var/lib/postgresql/data/
+      - postgis-data:/var/lib/postgresql
+      - dbbackups:/backups
+    environment:
+#       If you need to create multiple database you can add coma separated databases eg gis,data
+      - POSTGRES_DB=${DATABASE_NAME}
+      - POSTGRES_USER=${DATABASE_USER}
+      - POSTGRES_PASS=${DATABASE_PASSWORD}
+      - ALLOW_IP_RANGE=0.0.0.0/0
+      # Add extensions you need to be enabled by default in the DB. Default are the five specified below
+      - POSTGRES_MULTIPLE_EXTENSIONS=postgis,hstore,postgis_topology,postgis_raster,pgrouting
+    ports:
+      - 8351:5432
+    restart: on-failure
+    healthcheck:
+      test: "exit 0"
+
+
+  dbbackups:
+    image: kartoza/pg-backup:13.0
+    hostname: pg-backups
+    volumes:
+      - dbbackups:/backups
+    ports:
+      - 8352:5432
+    # env_file:
+      # - ./config/.env.dev
+    environment:
+      - DUMPPREFIX=${DATABASE_NAME}
+      - POSTGRES_USER=${DATABASE_USER}
+      - POSTGRES_PASS=${DATABASE_PASSWORD}
+      - POSTGRES_PORT=5432
+      - POSTGRES_HOST=db
+      - POSTGRES_DBNAME=gis
+    restart: on-failure
+    depends_on:
+      db:
+        condition: service_healthy
+  redis:
+    image: redis:alpine
+    restart: always
+    ports:
+      - 8353:6379
+
+  celery:
+    restart: always
+    build:
+      context: ./src/backend
+      dockerfile: celery.dockerfile
+      args:
+        PIP_REQUIREMENTS: ${PIP_REQUIREMENTS}
+        DATABASE_USER: ${DATABASE_USER}
+    command: bash -c "./venv/bin/celery -A backend worker -l info"
+
+    environment:
+      DJANGO_SETTINGS_MODULE: "${DJANGO_SETTINGS_MODULE}"
+      DJANGO_SECRET_KEY: "${DJANGO_SECRET_KEY}"
+      DATABASE_NAME: "${DATABASE_NAME}"
+      DATABASE_HOST: "${DATABASE_HOST}"
+      DATABASE_USER: "${DATABASE_USER}"
+      DATABASE_PORT: ${DATABASE_PORT}
+      DATABASE_PASSWORD: "${DATABASE_PASSWORD}"
+      EMAIL_HOST: "${EMAIL_HOST}"
+      EMAIL_PORT: "${EMAIL_PORT}"
+      EMAIL_HOST_USER: "${EMAIL_HOST_USER}"
+      EMAIL_HOST_PASSWORD: "${EMAIL_HOST_PASSWORD}"
+      CELERY_BROKER_URL: "${CELERY_BROKER_URL}"
+      CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND}
+    depends_on:
+     - db
+     - redis
+     - gunicorn
+
+  celery_beat:
+    restart: always
+    build:
+      context: ./src/backend
+      dockerfile: celery.beat.dockerfile
+      args:
+        PIP_REQUIREMENTS: ${PIP_REQUIREMENTS}
+        DATABASE_USER: ${DATABASE_USER}
+    command: bash -c "./venv/bin/celery -A backend beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler"
+
+    environment:
+      DJANGO_SETTINGS_MODULE: "${DJANGO_SETTINGS_MODULE}"
+      DJANGO_SECRET_KEY: "${DJANGO_SECRET_KEY}"
+      DATABASE_NAME: "${DATABASE_NAME}"
+      DATABASE_HOST: ${DATABASE_HOST}
+      DATABASE_USER: "${DATABASE_USER}"
+      DATABASE_PORT: ${DATABASE_PORT}
+      DATABASE_PASSWORD: "${DATABASE_PASSWORD}"
+      EMAIL_HOST: "${EMAIL_HOST}"
+      EMAIL_PORT: "${EMAIL_PORT}"
+      EMAIL_HOST_USER: "${EMAIL_HOST_USER}"
+      EMAIL_HOST_PASSWORD: "${EMAIL_HOST_PASSWORD}"
+      CELERY_BROKER_URL: "${CELERY_BROKER_URL}"
+      CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND}
+    depends_on:
+     - db
+     - redis
+     - gunicorn
 
 volumes:
-  postgres_data:
+  dbbackups:
+  postgis-data:
   static_volume:
   media_volume:

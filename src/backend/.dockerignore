@@ -18,10 +18,10 @@
 __pycache__
 dist
 docs
-src/backend/venv/
-logs
-src/node_modules
-src/backend/media/
-src/backend/static/
+/venv/
+/logs/
+/node_modules/
+/media/
+/static/
 stats
 Dockerfile
