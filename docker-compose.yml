@@ -2,10 +2,11 @@ version: "3.8"
 
 services:
   nginx:
+    container_name: rss_nginx
     image: nginx:latest
     restart: always
     ports:
-      - 80:80
+      - "80:80"
     volumes:
       - /var/log/nginx:/var/log/nginx
       - ./config/nginx/conf.d:/etc/nginx/conf.d
@@ -15,9 +16,10 @@ services:
       - gunicorn
 
   gunicorn:
+    container_name: rss_gunicorn
     restart: always
     ports:
-    - 8000:8000
+    - "8000:8000"
     build:
       context: ./src/backend
       dockerfile: backend.dockerfile
@@ -47,7 +49,8 @@ services:
 
 
   db:
-    image: kartoza/postgis:13-3.1
+    container_name: rss_db
+    image: kartoza/postgis:latest
     volumes:
       - postgis-data:/var/lib/postgresql
       - dbbackups:/backups
@@ -60,19 +63,20 @@ services:
       # Add extensions you need to be enabled by default in the DB. Default are the five specified below
       - POSTGRES_MULTIPLE_EXTENSIONS=postgis,hstore,postgis_topology,postgis_raster,pgrouting
     ports:
-      - 8351:5432
+      - "8351:5432"
     restart: on-failure
     healthcheck:
       test: "exit 0"
 
 
   dbbackups:
+    container_name: rss_dbbackups
     image: kartoza/pg-backup:13.0
     hostname: pg-backups
     volumes:
       - dbbackups:/backups
     ports:
-      - 8352:5432
+      - "8352:5432"
     # env_file:
       # - ./config/.env.dev
     environment:
@@ -84,15 +88,16 @@ services:
       - POSTGRES_DBNAME=gis
     restart: on-failure
     depends_on:
-      db:
-        condition: service_healthy
+      - db
   redis:
+    container_name: rss_redis
     image: redis:alpine
     restart: always
     ports:
-      - 8353:6379
+      - "8353:6379"
 
   celery:
+    container_name: rss_celery
     restart: always
     build:
       context: ./src/backend
@@ -115,13 +120,14 @@ services:
       EMAIL_HOST_USER: "${EMAIL_HOST_USER}"
       EMAIL_HOST_PASSWORD: "${EMAIL_HOST_PASSWORD}"
       CELERY_BROKER_URL: "${CELERY_BROKER_URL}"
-      CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND}
+      CELERY_RESULT_BACKEND: "${CELERY_RESULT_BACKEND}"
     depends_on:
      - db
      - redis
      - gunicorn
 
   celery_beat:
+    container_name: rss_celery_beat
     restart: always
     build:
       context: ./src/backend
@@ -135,9 +141,9 @@ services:
       DJANGO_SETTINGS_MODULE: "${DJANGO_SETTINGS_MODULE}"
       DJANGO_SECRET_KEY: "${DJANGO_SECRET_KEY}"
       DATABASE_NAME: "${DATABASE_NAME}"
-      DATABASE_HOST: ${DATABASE_HOST}
+      DATABASE_HOST: "${DATABASE_HOST}"
       DATABASE_USER: "${DATABASE_USER}"
-      DATABASE_PORT: ${DATABASE_PORT}
+      DATABASE_PORT: "${DATABASE_PORT}"
       DATABASE_PASSWORD: "${DATABASE_PASSWORD}"
       EMAIL_HOST: "${EMAIL_HOST}"
       EMAIL_PORT: "${EMAIL_PORT}"

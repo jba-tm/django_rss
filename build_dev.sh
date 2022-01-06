@@ -7,7 +7,7 @@ DJANGO_SECRET_KEY=$DJANGO_SECRET_KEY \
 docker-compose --env-file ./config/.env.dev up --detach --build
 
 
-sudo docker exec -u root -d django_rss_gunicorn_1 ./venv/bin/python3 manage.py makemigrations
-sudo docker exec -u root -d django_rss_gunicorn_1 ./venv/bin/python3 manage.py migrate
-sudo docker exec -u root -d django_rss_gunicorn_1 ./venv/bin/python3 manage.py loaddata data
-sudo docker exec -u root -d django_rss_gunicorn_1 ./venv/bin/python3 manage.py collectstatic
+sudo docker exec -u root -d rss_gunicorn ./venv/bin/python3 manage.py makemigrations
+sudo docker exec -u root -d rss_gunicorn ./venv/bin/python3 manage.py migrate
+sudo docker exec -u root -d rss_gunicorn ./venv/bin/python3 manage.py loaddata data
+sudo docker exec -u root -d rss_gunicorn ./venv/bin/python3 manage.py collectstatic --no-input

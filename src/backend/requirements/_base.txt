@@ -1,5 +1,5 @@
 amqp==5.0.6
-anyjson==0.3.3
+anyjson==0.2.5
 asgiref==3.4.1
 beautifulsoup4==4.9.3
 billiard==3.6.4.0
